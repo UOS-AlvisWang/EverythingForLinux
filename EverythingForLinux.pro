@@ -24,9 +24,11 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    worker.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h \
+    worker.h
 
 FORMS    +=
 
@@ -36,4 +38,7 @@ PKGCONFIG += dtkwidget
 
 CONFIG += link_pkgconfig
 PKGCONFIG += dtkwidget
+
+RESOURCES += \
+    rsc.qrc
 
