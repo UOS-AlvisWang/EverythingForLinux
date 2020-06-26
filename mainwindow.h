@@ -43,6 +43,8 @@ signals:
 
 private:
     QString getSizeString(qint64 bitSize);
+    void onMouseRightOnTableWgt();
+    void onOpenFilePosition();
 
 private:
     QVBoxLayout* vBoxLayoutMain = new QVBoxLayout();
@@ -55,6 +57,8 @@ private:
     QRadioButton* radioBtnFuzzy = nullptr;
     QTableWidget* tableWgtRst = nullptr;
     QMap<int, QString> rowWithFile;
+    QMenu* tableWgtRstMenu = nullptr;
+    QAction* actionOpen = nullptr;
 };
 
 #endif // MAINWINDOW_H

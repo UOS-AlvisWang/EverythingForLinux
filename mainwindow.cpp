@@ -8,6 +8,10 @@
 #include <QFileInfo>
 #include <QFileIconProvider>
 #include <QDateTime>
+#include <QAction>
+#include <QDesktopServices>
+#include <QUrl>
+#include <QTextCodec>
 
 MainWindow::MainWindow(DMainWindow *parent) :
     DMainWindow(parent)
@@ -18,6 +22,8 @@ MainWindow::MainWindow(DMainWindow *parent) :
   , radioBtnExact(new QRadioButton(this))
   , radioBtnFuzzy(new QRadioButton(this))
   , tableWgtRst(new QTableWidget(this))
+  , tableWgtRstMenu(new QMenu())
+  , actionOpen(new QAction("打开文件所在位置", tableWgtRstMenu))
 {
     worker->moveToThread(workThread);
     workThread->start();
@@ -76,6 +82,7 @@ void MainWindow::initUi()
     tableWgtRst->setEditTriggers(QAbstractItemView::NoEditTriggers);
     tableWgtRst->horizontalHeader()->setStretchLastSection(true);
     tableWgtRst->verticalHeader()->setVisible(false);
+    tableWgtRst->setSelectionMode(QAbstractItemView::SingleSelection);
 
     QStringList lstHeader;
     lstHeader << "序号" <<"文件名" << "文件路径" << "文件大小" << "修改时间";
@@ -95,6 +102,9 @@ void MainWindow::initUi()
     QFrame* frame = new QFrame(this);
     setCentralWidget(frame);
     frame->setLayout(vBoxLayoutMain);
+
+    tableWgtRstMenu->addAction(actionOpen);
+    tableWgtRst->setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
 void MainWindow::initConnection()
@@ -102,10 +112,13 @@ void MainWindow::initConnection()
     connect(this, &MainWindow::sigSearch, worker, &Worker::onSearch, Qt::QueuedConnection);
     connect(worker, &Worker::sigSearchOver, this, &MainWindow::onSearchOver, Qt::QueuedConnection);
     connect(btnSearch, &DPushButton::clicked, this, &MainWindow::onBtnSearchClicked, Qt::QueuedConnection);
+    connect(tableWgtRst, &QTableWidget::customContextMenuRequested, this, &MainWindow::onMouseRightOnTableWgt);
+    connect(actionOpen, &QAction::triggered, this, &MainWindow::onOpenFilePosition);
 }
 
 void MainWindow::onSearchOver(QStringList lstFilePaths)
 {
+    rowWithFile.clear();
     tableWgtRst->clearContents();
     tableWgtRst->setRowCount(lstFilePaths.count());
 
@@ -190,4 +203,33 @@ QString MainWindow::getSizeString(qint64 bitSize)
     }
 
     return size;
+}
+
+void MainWindow::onMouseRightOnTableWgt()
+{
+    QTableWidgetItem* item = tableWgtRst->currentItem();
+
+    if(!item)
+    {
+        return;
+    }
+
+    tableWgtRstMenu->exec(QCursor::pos());
+}
+
+void MainWindow::onOpenFilePosition()
+{
+    QTableWidgetItem* item = tableWgtRst->currentItem();
+
+    if(!item)
+    {
+        return;
+    }
+
+    int row = item->row();
+    QString strFilePath = rowWithFile[row];
+
+    QTextCodec *code = QTextCodec::codecForName("GB2312");//解决中文路径问题
+    std::string name = code->fromUnicode(strFilePath.left(strFilePath.lastIndexOf("/"))).data();
+    QDesktopServices::openUrl(QUrl(name.c_str()));
 }

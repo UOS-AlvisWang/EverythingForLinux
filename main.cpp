@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include <DApplication>
+#include <QTextCodec>
 
 int main(int argc, char *argv[])
 {
