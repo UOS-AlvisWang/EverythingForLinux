@@ -2,22 +2,31 @@
 #include "worker.h"
 
 #include <DTitlebar>
+#include <DSpinner>
 
 #include <QFrame>
 #include <QHeaderView>
 #include <QFileInfo>
 #include <QFileIconProvider>
 #include <QDateTime>
+#include <QAction>
+#include <QDesktopServices>
+#include <QUrl>
+#include <QTextCodec>
+#include <QKeySequence>
 
-MainWindow::MainWindow(DMainWindow *parent) :
+MainWindow::MainWindow(QWidget *parent) :
     DMainWindow(parent)
   , worker(new Worker())
   , workThread(new QThread())
   , lineEidtFileName(new DLineEdit(this))
-  , btnSearch(new DPushButton(this))
+  , btnSearch(new QPushButton(this))
   , radioBtnExact(new QRadioButton(this))
   , radioBtnFuzzy(new QRadioButton(this))
   , tableWgtRst(new QTableWidget(this))
+  , tableWgtRstMenu(new QMenu())
+  , actionOpen(new QAction("打开文件所在位置", tableWgtRstMenu))
+  , spinner(new DSpinner(this))
 {
     worker->moveToThread(workThread);
     workThread->start();
@@ -27,11 +36,8 @@ MainWindow::MainWindow(DMainWindow *parent) :
 
 MainWindow::~MainWindow()
 {
-    if(workThread->isRunning())
-    {
-        workThread->wait();
-        workThread->quit();
-    }
+     workThread->quit();
+     workThread->wait();
 
     if(vBoxLayoutMain)
     {
@@ -59,10 +65,16 @@ MainWindow::~MainWindow()
 
 void MainWindow::initUi()
 {
-    titlebar()->setVisible(false);
+    setFixedSize(1200, 800);
+    spinner->move(this->width()/2 - spinner->width()/2, this->height()/2 - spinner->height()/2);
+    spinner->setFixedSize(100,100);
+    spinner->start();
+    spinner->hide();
     lineEidtFileName->setPlaceholderText("输入要查找的文件名");
+    btnSearch->setShortcut(Qt::Key_Enter);
+    btnSearch->setShortcut(Qt::Key_Return);
+    btnSearch->setIcon(QIcon("qrc:/img/RSC/img/search.png"));
     btnSearch->setText("搜索");
-    //btnSearch->setIcon(QIcon("qrc:/img/RSC/img/search.png"));
     radioBtnExact->setText("精确查找");
     radioBtnExact->setChecked(true);
     radioBtnFuzzy->setText("模糊查找");
@@ -76,6 +88,7 @@ void MainWindow::initUi()
     tableWgtRst->setEditTriggers(QAbstractItemView::NoEditTriggers);
     tableWgtRst->horizontalHeader()->setStretchLastSection(true);
     tableWgtRst->verticalHeader()->setVisible(false);
+    tableWgtRst->setSelectionMode(QAbstractItemView::SingleSelection);
 
     QStringList lstHeader;
     lstHeader << "序号" <<"文件名" << "文件路径" << "文件大小" << "修改时间";
@@ -95,17 +108,24 @@ void MainWindow::initUi()
     QFrame* frame = new QFrame(this);
     setCentralWidget(frame);
     frame->setLayout(vBoxLayoutMain);
+
+    tableWgtRstMenu->addAction(actionOpen);
+    tableWgtRst->setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
 void MainWindow::initConnection()
 {
     connect(this, &MainWindow::sigSearch, worker, &Worker::onSearch, Qt::QueuedConnection);
     connect(worker, &Worker::sigSearchOver, this, &MainWindow::onSearchOver, Qt::QueuedConnection);
-    connect(btnSearch, &DPushButton::clicked, this, &MainWindow::onBtnSearchClicked, Qt::QueuedConnection);
+    connect(btnSearch, &QPushButton::clicked, this, &MainWindow::onBtnSearchClicked, Qt::QueuedConnection);
+    connect(tableWgtRst, &QTableWidget::customContextMenuRequested, this, &MainWindow::onMouseRightOnTableWgt);
+    connect(actionOpen, &QAction::triggered, this, &MainWindow::onOpenFilePosition);
 }
 
 void MainWindow::onSearchOver(QStringList lstFilePaths)
 {
+    spinner->hide();
+    rowWithFile.clear();
     tableWgtRst->clearContents();
     tableWgtRst->setRowCount(lstFilePaths.count());
 
@@ -129,13 +149,23 @@ void MainWindow::onSearchOver(QStringList lstFilePaths)
         QString fileSize = getSizeString(fileInfo.size());
         QFileIconProvider iconProvider;
         QIcon fileIcon = iconProvider.icon(fileInfo);
+
+        if(fileIcon.isNull())
+        {
+            fileIcon = QIcon(":/img/RSC/img/unknowFile.png");
+        }
+
         QString changeTime = fileInfo.lastModified().toString("yyyy-MM-dd hh:mm:ss");
 
-        tableWgtRst->setItem(rowIndex, 0, new QTableWidgetItem(QString::number(rowIndex+1)));
+        QTableWidgetItem* indexItem = new QTableWidgetItem(QString::number(rowIndex+1));
+        indexItem->setTextAlignment(Qt::AlignCenter);
+        tableWgtRst->setItem(rowIndex, 0, indexItem);
         tableWgtRst->setItem(rowIndex, 1, new QTableWidgetItem(fileIcon, fileName));
         tableWgtRst->setItem(rowIndex, 2, new QTableWidgetItem(filePath));
         tableWgtRst->setItem(rowIndex, 3, new QTableWidgetItem(fileSize));
-        tableWgtRst->setItem(rowIndex, 4, new QTableWidgetItem(changeTime));
+        QTableWidgetItem* changeTimeItem = new QTableWidgetItem(changeTime);
+        changeTimeItem->setTextAlignment(Qt::AlignCenter);
+        tableWgtRst->setItem(rowIndex, 4, changeTimeItem);
 
         rowWithFile.insert(rowIndex, fileInfo.filePath());
         rowIndex++;
@@ -151,8 +181,11 @@ void MainWindow::onBtnSearchClicked()
         return;
     }
 
+    tableWgtRst->clearContents();
+    tableWgtRst->setRowCount(0);
     SearchType searchType = SearchType(radioBtnExact->isChecked() ? 0 : 1);
     emit sigSearch(fileName, searchType);
+    spinner->show();
 }
 
 QString MainWindow::getSizeString(qint64 bitSize)
@@ -180,4 +213,30 @@ QString MainWindow::getSizeString(qint64 bitSize)
     }
 
     return size;
+}
+
+void MainWindow::onMouseRightOnTableWgt()
+{
+    QTableWidgetItem* item = tableWgtRst->currentItem();
+
+    if(!item)
+    {
+        return;
+    }
+
+    tableWgtRstMenu->exec(QCursor::pos());
+}
+
+void MainWindow::onOpenFilePosition()
+{
+    QTableWidgetItem* item = tableWgtRst->currentItem();
+
+    if(!item)
+    {
+        return;
+    }
+
+    int row = item->row();
+    QString strFilePath = rowWithFile[row];
+    QDesktopServices::openUrl(QUrl(strFilePath.left(strFilePath.lastIndexOf("/"))));
 }
