@@ -1,5 +1,7 @@
 #include "worker.h"
 
+#include <QFileInfo>
+
 Worker::Worker(QObject *parent) : QObject(parent)
   , process(new QProcess(this))
 {
@@ -38,15 +40,20 @@ void Worker::onRead()
 
 void Worker::onProcessStateChanged(QProcess::ProcessState state)
 {
+    QStringList lstTmp;
     switch (state) {
     case QProcess::NotRunning:
 
-        while(lstFilePaths.indexOf("") != -1)
+        for(int i = 0; i < lstFilePaths.size(); i++)
         {
-            lstFilePaths.removeAt(lstFilePaths.indexOf(""));
+            QFileInfo fileInfo(lstFilePaths[i]);
+            if(fileInfo.exists())
+            {
+                lstTmp.append(lstFilePaths[i]);
+            }
         }
 
-        emit sigSearchOver(lstFilePaths);
+        emit sigSearchOver(lstTmp);
         break;
     case QProcess::Starting:
         lstFilePaths.clear();
