@@ -2,6 +2,7 @@
 #include "worker.h"
 
 #include <DTitlebar>
+#include <DSpinner>
 
 #include <QFrame>
 #include <QHeaderView>
@@ -12,18 +13,20 @@
 #include <QDesktopServices>
 #include <QUrl>
 #include <QTextCodec>
+#include <QKeySequence>
 
 MainWindow::MainWindow(QWidget *parent) :
     DMainWindow(parent)
   , worker(new Worker())
   , workThread(new QThread())
   , lineEidtFileName(new DLineEdit(this))
-  , btnSearch(new DPushButton(this))
+  , btnSearch(new QPushButton(this))
   , radioBtnExact(new QRadioButton(this))
   , radioBtnFuzzy(new QRadioButton(this))
   , tableWgtRst(new QTableWidget(this))
   , tableWgtRstMenu(new QMenu())
   , actionOpen(new QAction("打开文件所在位置", tableWgtRstMenu))
+  , spinner(new DSpinner(this))
 {
     worker->moveToThread(workThread);
     workThread->start();
@@ -33,11 +36,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-    if(workThread->isRunning())
-    {
-        workThread->wait();
-        workThread->quit();
-    }
+     workThread->quit();
+     workThread->wait();
 
     if(vBoxLayoutMain)
     {
@@ -65,9 +65,16 @@ MainWindow::~MainWindow()
 
 void MainWindow::initUi()
 {
+    setFixedSize(1200, 800);
+    spinner->move(this->width()/2 - spinner->width()/2, this->height()/2 - spinner->height()/2);
+    spinner->setFixedSize(100,100);
+    spinner->start();
+    spinner->hide();
     lineEidtFileName->setPlaceholderText("输入要查找的文件名");
+    btnSearch->setShortcut(Qt::Key_Enter);
+    btnSearch->setShortcut(Qt::Key_Return);
+    btnSearch->setIcon(QIcon("qrc:/img/RSC/img/search.png"));
     btnSearch->setText("搜索");
-    //btnSearch->setIcon(QIcon("qrc:/img/RSC/img/search.png"));
     radioBtnExact->setText("精确查找");
     radioBtnExact->setChecked(true);
     radioBtnFuzzy->setText("模糊查找");
@@ -110,13 +117,14 @@ void MainWindow::initConnection()
 {
     connect(this, &MainWindow::sigSearch, worker, &Worker::onSearch, Qt::QueuedConnection);
     connect(worker, &Worker::sigSearchOver, this, &MainWindow::onSearchOver, Qt::QueuedConnection);
-    connect(btnSearch, &DPushButton::clicked, this, &MainWindow::onBtnSearchClicked, Qt::QueuedConnection);
+    connect(btnSearch, &QPushButton::clicked, this, &MainWindow::onBtnSearchClicked, Qt::QueuedConnection);
     connect(tableWgtRst, &QTableWidget::customContextMenuRequested, this, &MainWindow::onMouseRightOnTableWgt);
     connect(actionOpen, &QAction::triggered, this, &MainWindow::onOpenFilePosition);
 }
 
 void MainWindow::onSearchOver(QStringList lstFilePaths)
 {
+    spinner->hide();
     rowWithFile.clear();
     tableWgtRst->clearContents();
     tableWgtRst->setRowCount(lstFilePaths.count());
@@ -173,8 +181,11 @@ void MainWindow::onBtnSearchClicked()
         return;
     }
 
+    tableWgtRst->clearContents();
+    tableWgtRst->setRowCount(0);
     SearchType searchType = SearchType(radioBtnExact->isChecked() ? 0 : 1);
     emit sigSearch(fileName, searchType);
+    spinner->show();
 }
 
 QString MainWindow::getSizeString(qint64 bitSize)

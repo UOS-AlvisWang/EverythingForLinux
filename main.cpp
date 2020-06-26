@@ -20,7 +20,6 @@ int main(int argc, char *argv[])
     a.setApplicationName("Everything For Linux"); //只有在这儿修改窗口标题才有效
 
     MainWindow w;
-    w.setFixedSize(1200, 800);
     w.show();
 
     //让打开时界面显示在正中
