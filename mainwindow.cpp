@@ -13,7 +13,7 @@
 #include <QUrl>
 #include <QTextCodec>
 
-MainWindow::MainWindow(DMainWindow *parent) :
+MainWindow::MainWindow(QWidget *parent) :
     DMainWindow(parent)
   , worker(new Worker())
   , workThread(new QThread())
@@ -65,7 +65,6 @@ MainWindow::~MainWindow()
 
 void MainWindow::initUi()
 {
-    titlebar()->setVisible(false);
     lineEidtFileName->setPlaceholderText("输入要查找的文件名");
     btnSearch->setText("搜索");
     //btnSearch->setIcon(QIcon("qrc:/img/RSC/img/search.png"));
@@ -228,8 +227,5 @@ void MainWindow::onOpenFilePosition()
 
     int row = item->row();
     QString strFilePath = rowWithFile[row];
-
-    QTextCodec *code = QTextCodec::codecForName("GB2312");//解决中文路径问题
-    std::string name = code->fromUnicode(strFilePath.left(strFilePath.lastIndexOf("/"))).data();
-    QDesktopServices::openUrl(QUrl(name.c_str()));
+    QDesktopServices::openUrl(QUrl(strFilePath.left(strFilePath.lastIndexOf("/"))));
 }

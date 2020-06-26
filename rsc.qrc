@@ -2,5 +2,6 @@
     <qresource prefix="/img">
         <file>RSC/img/search.png</file>
         <file>RSC/img/unknowFile.png</file>
+        <file>RSC/img/logo.ico</file>
     </qresource>
 </RCC>
