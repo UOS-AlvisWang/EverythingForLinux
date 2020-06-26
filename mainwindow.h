@@ -1,7 +1,9 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <dmainwindow.h>
+#include "define.h"
+
+#include <DMainWindow>
 #include <DLineEdit>
 #include <dpushbutton.h>
 
@@ -32,6 +34,16 @@ public:
     void initUi();
     void initConnection();
 
+public slots:
+    void onSearchOver(QStringList lstFilePaths);
+    void onBtnSearchClicked();
+
+signals:
+    void sigSearch(QString fileName, SearchType searchType);
+
+private:
+    QString getSizeString(qint64 bitSize);
+
 private:
     QVBoxLayout* vBoxLayoutMain = new QVBoxLayout();
     QHBoxLayout* hBoxLayoutHead = new QHBoxLayout();
@@ -42,6 +54,7 @@ private:
     QRadioButton* radioBtnExact = nullptr;
     QRadioButton* radioBtnFuzzy = nullptr;
     QTableWidget* tableWgtRst = nullptr;
+    QMap<int, QString> rowWithFile;
 };
 
 #endif // MAINWINDOW_H

@@ -28,7 +28,8 @@ SOURCES += main.cpp\
     worker.cpp
 
 HEADERS  += mainwindow.h \
-    worker.h
+    worker.h \
+    define.h
 
 FORMS    +=
 

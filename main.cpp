@@ -3,6 +3,7 @@
 
 int main(int argc, char *argv[])
 {
+    qRegisterMetaType<SearchType>("SearchType");
     DApplication a(argc, argv);
     MainWindow w;
     w.setFixedSize(1200,800);
