@@ -129,13 +129,23 @@ void MainWindow::onSearchOver(QStringList lstFilePaths)
         QString fileSize = getSizeString(fileInfo.size());
         QFileIconProvider iconProvider;
         QIcon fileIcon = iconProvider.icon(fileInfo);
+
+        if(fileIcon.isNull())
+        {
+            fileIcon = QIcon(":/img/RSC/img/unknowFile.png");
+        }
+
         QString changeTime = fileInfo.lastModified().toString("yyyy-MM-dd hh:mm:ss");
 
-        tableWgtRst->setItem(rowIndex, 0, new QTableWidgetItem(QString::number(rowIndex+1)));
+        QTableWidgetItem* indexItem = new QTableWidgetItem(QString::number(rowIndex+1));
+        indexItem->setTextAlignment(Qt::AlignCenter);
+        tableWgtRst->setItem(rowIndex, 0, indexItem);
         tableWgtRst->setItem(rowIndex, 1, new QTableWidgetItem(fileIcon, fileName));
         tableWgtRst->setItem(rowIndex, 2, new QTableWidgetItem(filePath));
         tableWgtRst->setItem(rowIndex, 3, new QTableWidgetItem(fileSize));
-        tableWgtRst->setItem(rowIndex, 4, new QTableWidgetItem(changeTime));
+        QTableWidgetItem* changeTimeItem = new QTableWidgetItem(changeTime);
+        changeTimeItem->setTextAlignment(Qt::AlignCenter);
+        tableWgtRst->setItem(rowIndex, 4, changeTimeItem);
 
         rowWithFile.insert(rowIndex, fileInfo.filePath());
         rowIndex++;
