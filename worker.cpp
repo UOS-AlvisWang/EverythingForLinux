@@ -47,6 +47,7 @@ void Worker::onProcessStateChanged(QProcess::ProcessState state)
         for(int i = 0; i < lstFilePaths.size(); i++)
         {
             QFileInfo fileInfo(lstFilePaths[i]);
+
             if(fileInfo.exists())
             {
                 lstTmp.append(lstFilePaths[i]);

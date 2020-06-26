@@ -4,4 +4,7 @@
         <file>RSC/img/unknowFile.png</file>
         <file>RSC/img/logo.ico</file>
     </qresource>
+    <qresource prefix="/">
+        <file>RSC/img/tableWidget.qss</file>
+    </qresource>
 </RCC>

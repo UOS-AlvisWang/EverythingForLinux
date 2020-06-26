@@ -84,11 +84,20 @@ void MainWindow::initUi()
     tableWgtRst->horizontalHeader()->resizeSection(1, 150);
     tableWgtRst->horizontalHeader()->resizeSection(2, 500);
     tableWgtRst->horizontalHeader()->resizeSection(3, 100);
-    tableWgtRst->horizontalHeader()->resizeSection(4, 400);
+    tableWgtRst->horizontalHeader()->resizeSection(4, 300);
     tableWgtRst->setEditTriggers(QAbstractItemView::NoEditTriggers);
     tableWgtRst->horizontalHeader()->setStretchLastSection(true);
     tableWgtRst->verticalHeader()->setVisible(false);
     tableWgtRst->setSelectionMode(QAbstractItemView::SingleSelection);
+
+    QFile file(":/RSC/img/tableWidget.qss");
+
+    if(file.open(QFile::ReadOnly))
+    {
+      QString strStyleSheet = file.readAll();
+      file.close();
+      tableWgtRst->setStyleSheet(strStyleSheet);
+    }
 
     QStringList lstHeader;
     lstHeader << "序号" <<"文件名" << "文件路径" << "文件大小" << "修改时间";

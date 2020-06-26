@@ -43,3 +43,6 @@ PKGCONFIG += dtkwidget
 RESOURCES += \
     rsc.qrc
 
+DISTFILES += \
+    RSC/img/tableWidget.qss
+
