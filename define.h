@@ -6,4 +6,9 @@ enum SearchType{
   Fuzzy
 };
 
+enum CheckEnvRst{
+    NoLocate = 0,
+    Normal
+};
+
 #endif // DEFINE_H

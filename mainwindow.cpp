@@ -4,6 +4,8 @@
 #include <DTitlebar>
 #include <DSpinner>
 
+#include <QMessageBox>
+#include <QInputDialog>
 #include <QFrame>
 #include <QHeaderView>
 #include <QFileInfo>
@@ -14,6 +16,7 @@
 #include <QUrl>
 #include <QTextCodec>
 #include <QKeySequence>
+#include <QPixmap>
 
 MainWindow::MainWindow(QWidget *parent) :
     DMainWindow(parent)
@@ -32,6 +35,7 @@ MainWindow::MainWindow(QWidget *parent) :
     workThread->start();
     initUi();
     initConnection();
+    checkEnv();
 }
 
 MainWindow::~MainWindow()
@@ -84,11 +88,20 @@ void MainWindow::initUi()
     tableWgtRst->horizontalHeader()->resizeSection(1, 150);
     tableWgtRst->horizontalHeader()->resizeSection(2, 500);
     tableWgtRst->horizontalHeader()->resizeSection(3, 100);
-    tableWgtRst->horizontalHeader()->resizeSection(4, 400);
+    tableWgtRst->horizontalHeader()->resizeSection(4, 300);
     tableWgtRst->setEditTriggers(QAbstractItemView::NoEditTriggers);
     tableWgtRst->horizontalHeader()->setStretchLastSection(true);
     tableWgtRst->verticalHeader()->setVisible(false);
     tableWgtRst->setSelectionMode(QAbstractItemView::SingleSelection);
+
+    QFile file(":/RSC/img/tableWidget.qss");
+
+    if(file.open(QFile::ReadOnly))
+    {
+      QString strStyleSheet = file.readAll();
+      file.close();
+      tableWgtRst->setStyleSheet(strStyleSheet);
+    }
 
     QStringList lstHeader;
     lstHeader << "序号" <<"文件名" << "文件路径" << "文件大小" << "修改时间";
@@ -115,11 +128,18 @@ void MainWindow::initUi()
 
 void MainWindow::initConnection()
 {
+    connect(this, &MainWindow::sigCheckEnv, worker, &Worker::onCheckEnv, Qt::QueuedConnection);
+    connect(worker, &Worker::sigCheckEnvRst, this, &MainWindow::onCheckEnvOver, Qt::QueuedConnection);
     connect(this, &MainWindow::sigSearch, worker, &Worker::onSearch, Qt::QueuedConnection);
     connect(worker, &Worker::sigSearchOver, this, &MainWindow::onSearchOver, Qt::QueuedConnection);
     connect(btnSearch, &QPushButton::clicked, this, &MainWindow::onBtnSearchClicked, Qt::QueuedConnection);
     connect(tableWgtRst, &QTableWidget::customContextMenuRequested, this, &MainWindow::onMouseRightOnTableWgt);
     connect(actionOpen, &QAction::triggered, this, &MainWindow::onOpenFilePosition);
+}
+
+void MainWindow::checkEnv()
+{
+    emit sigCheckEnv();
 }
 
 void MainWindow::onSearchOver(QStringList lstFilePaths)
@@ -186,6 +206,15 @@ void MainWindow::onBtnSearchClicked()
     SearchType searchType = SearchType(radioBtnExact->isChecked() ? 0 : 1);
     emit sigSearch(fileName, searchType);
     spinner->show();
+}
+
+void MainWindow::onCheckEnvOver(CheckEnvRst checkEnvRst)
+{
+    if(checkEnvRst == NoLocate)
+    {
+        QMessageBox::warning(this, "安装locate", "检测到您的系统未安装locate，不能正常使用模糊查找的功能,请先安装locate。");
+        radioBtnFuzzy->setEnabled(false);
+    }
 }
 
 QString MainWindow::getSizeString(qint64 bitSize)

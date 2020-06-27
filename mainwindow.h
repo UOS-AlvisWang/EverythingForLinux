@@ -6,6 +6,7 @@
 #include <DMainWindow>
 #include <DLineEdit>
 #include <DSpinner>
+#include <dimagebutton.h>
 
 #include <QRadioButton>
 #include <QVBoxLayout>
@@ -26,20 +27,24 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
-    void initUi();
-    void initConnection();
-
 public slots:
     void onSearchOver(QStringList lstFilePaths);
     void onBtnSearchClicked();
+    void onCheckEnvOver(CheckEnvRst checkEnvRst);
 
 signals:
     void sigSearch(QString fileName, SearchType searchType);
+    void sigCheckEnv();
 
 private:
+    void initUi();
+    void initConnection();
+    void checkEnv();
+
     QString getSizeString(qint64 bitSize);
     void onMouseRightOnTableWgt();
     void onOpenFilePosition();
+    void onFlushLocateDb();
 
 private:
     QVBoxLayout* vBoxLayoutMain = new QVBoxLayout();
