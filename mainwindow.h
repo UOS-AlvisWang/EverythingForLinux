@@ -44,7 +44,7 @@ private:
     QString getSizeString(qint64 bitSize);
     void onMouseRightOnTableWgt();
     void onOpenFilePosition();
-    void onFlushLocateDb();
+    void onSortTanleWgt(int index);
 
 private:
     QVBoxLayout* vBoxLayoutMain = new QVBoxLayout();

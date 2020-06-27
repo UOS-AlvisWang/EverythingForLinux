@@ -93,6 +93,7 @@ void MainWindow::initUi()
     tableWgtRst->horizontalHeader()->setStretchLastSection(true);
     tableWgtRst->verticalHeader()->setVisible(false);
     tableWgtRst->setSelectionMode(QAbstractItemView::SingleSelection);
+    tableWgtRst->horizontalHeader()->setSortIndicatorShown(true);		//显示排序图标（默认为上下箭头）
 
     QFile file(":/RSC/img/tableWidget.qss");
 
@@ -135,6 +136,7 @@ void MainWindow::initConnection()
     connect(btnSearch, &QPushButton::clicked, this, &MainWindow::onBtnSearchClicked, Qt::QueuedConnection);
     connect(tableWgtRst, &QTableWidget::customContextMenuRequested, this, &MainWindow::onMouseRightOnTableWgt);
     connect(actionOpen, &QAction::triggered, this, &MainWindow::onOpenFilePosition);
+    connect(tableWgtRst->horizontalHeader(), &QHeaderView::sectionClicked, this, &MainWindow::onSortTanleWgt);
 }
 
 void MainWindow::checkEnv()
@@ -190,6 +192,8 @@ void MainWindow::onSearchOver(QStringList lstFilePaths)
         rowWithFile.insert(rowIndex, fileInfo.filePath());
         rowIndex++;
     }
+
+    tableWgtRst->sortByColumn(4);
 }
 
 void MainWindow::onBtnSearchClicked()
@@ -268,4 +272,9 @@ void MainWindow::onOpenFilePosition()
     int row = item->row();
     QString strFilePath = rowWithFile[row];
     QDesktopServices::openUrl(QUrl(strFilePath.left(strFilePath.lastIndexOf("/"))));
+}
+
+void MainWindow::onSortTanleWgt(int index)
+{
+    tableWgtRst->sortByColumn(index);
 }
