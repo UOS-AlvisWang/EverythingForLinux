@@ -192,6 +192,8 @@ void MainWindow::onSearchOver(QStringList lstFilePaths)
         rowWithFile.insert(rowIndex, fileInfo.filePath());
         rowIndex++;
     }
+
+    tableWgtRst->sortByColumn(4);
 }
 
 void MainWindow::onBtnSearchClicked()
