@@ -15,5 +15,4 @@ UI:Qt和DTK(Deepin Tool Kit)做界面。
 
 ### 待实现功能：
     退出隐藏任务栏。
-    自动安装locate。
-    引导正确操作。
+    打包
