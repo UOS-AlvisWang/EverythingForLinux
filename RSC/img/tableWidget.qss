@@ -4,7 +4,7 @@ QTableWidget
     alternate-background-color:#e3edf9;
     font:14px "微软雅黑";
     color:#677483;
-    gridline-color: #ccddf0;
+    gridline-color: #ccddf0;s
 }
 
 QTableWidget::item

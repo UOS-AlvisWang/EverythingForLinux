@@ -14,14 +14,18 @@ public:
 
 signals:
     void sigSearchOver(QStringList lstFilePaths);
+    void sigCheckEnvRst(CheckEnvRst checkEnvRst);
 
 public slots:
     void onSearch(QString fileName, SearchType searchType);
     void onRead();
     void onProcessStateChanged(QProcess::ProcessState state);
+    void onCheckEnv();
+    void onReadCheckEnv();
 
 private:
     QProcess* process = nullptr;
+    QProcess* processCheckEnv = nullptr;
     QStringList lstFilePaths;
 };
 

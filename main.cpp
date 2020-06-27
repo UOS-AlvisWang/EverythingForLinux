@@ -6,6 +6,7 @@
 int main(int argc, char *argv[])
 {
     qRegisterMetaType<SearchType>("SearchType");
+    qRegisterMetaType<CheckEnvRst>("CheckEnvRst");
     DApplication::loadDXcbPlugin();  //让bar处在标题栏中
     DApplication a(argc, argv);
 

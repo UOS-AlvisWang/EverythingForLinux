@@ -1,12 +1,15 @@
 #include "worker.h"
 
 #include <QFileInfo>
+#include <QDebug>
 
 Worker::Worker(QObject *parent) : QObject(parent)
   , process(new QProcess(this))
+  , processCheckEnv(new QProcess(this))
 {
     connect(process, &QProcess::readyReadStandardOutput, this, &Worker::onRead);
     connect(process, &QProcess::stateChanged, this, &Worker::onProcessStateChanged);
+    connect(processCheckEnv, &QProcess::readyReadStandardOutput, this, &Worker::onReadCheckEnv);
 }
 
 void Worker::onSearch(QString fileName, SearchType searchType)
@@ -25,7 +28,7 @@ void Worker::onSearch(QString fileName, SearchType searchType)
 
     if(searchType == SearchType::Fuzzy)
     {
-        shell = QString("locate %1").arg(fileName);
+        shell = QString("locate -l 1000 %1").arg(fileName);
     }
 
     process->start(shell);
@@ -61,4 +64,24 @@ void Worker::onProcessStateChanged(QProcess::ProcessState state)
     default:
         break;
     }
+}
+
+void Worker::onCheckEnv()
+{
+    QString shell = "dpkg -s locate";
+    processCheckEnv->start(shell);
+}
+
+void Worker::onReadCheckEnv()
+{
+    QByteArray bytes = processCheckEnv->readAllStandardOutput();
+    QString output = QString(bytes);
+
+    if(output.indexOf("deinstall") != -1)
+    {
+        emit sigCheckEnvRst(NoLocate);
+        return;
+    }
+
+    emit sigCheckEnvRst(Normal);
 }

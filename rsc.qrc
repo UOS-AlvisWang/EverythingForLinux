@@ -3,6 +3,7 @@
         <file>RSC/img/search.png</file>
         <file>RSC/img/unknowFile.png</file>
         <file>RSC/img/logo.ico</file>
+        <file>RSC/img/flush.png</file>
     </qresource>
     <qresource prefix="/">
         <file>RSC/img/tableWidget.qss</file>
