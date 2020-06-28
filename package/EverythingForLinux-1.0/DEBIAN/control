@@ -1,0 +1,8 @@
+Package: EverythingForLinux
+Version: 1.1.0
+Architecture: amd64
+Section: utils
+Depends: locate
+Maintainer: AlvisWang[836988207@qq.com]
+Homepage: https://github.com/UOS-AlvisWang/EverythingForLinux
+Description: this app is to help user to search file for linux OS.

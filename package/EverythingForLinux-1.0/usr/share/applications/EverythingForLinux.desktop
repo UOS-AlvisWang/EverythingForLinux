@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=EverythingForLinux
+Name[zh_CN]=文件搜索
+Exec=/usr/bin/EverythingForLinux
+Icon=/usr/share/icons/search.png
+Terminal=false
+X-MultipleArgs=false
+Type=Application
+Encoding=UTF-8
+Categories=Application;Utility;
+StartupNotify=false
