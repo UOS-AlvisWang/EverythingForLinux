@@ -14,8 +14,10 @@
 #include <QThread>
 #include <QTableWidget>
 #include <QPushButton>
+#include <QSystemTrayIcon>
 
 class Worker;
+class TrayMenu;
 
 DWIDGET_USE_NAMESPACE
 
@@ -24,8 +26,10 @@ class MainWindow : public DMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = 0);
-    ~MainWindow();
+    explicit MainWindow(QWidget *parent = nullptr);
+    virtual ~MainWindow() Q_DECL_OVERRIDE;
+
+    virtual void closeEvent(QCloseEvent* event) Q_DECL_OVERRIDE;
 
 public slots:
     void onSearchOver(QStringList lstFilePaths);
@@ -60,6 +64,8 @@ private:
     QMenu* tableWgtRstMenu = nullptr;
     QAction* actionOpen = nullptr;
     DSpinner* spinner = nullptr;
+    TrayMenu* trayMenu = nullptr;
+    QSystemTrayIcon* trayIcon = nullptr;
 };
 
 #endif // MAINWINDOW_H
