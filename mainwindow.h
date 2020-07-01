@@ -4,9 +4,10 @@
 #include "define.h"
 
 #include <DMainWindow>
-#include <DLineEdit>
+#include <DSearchEdit>
 #include <DSpinner>
 #include <dimagebutton.h>
+#include <DToolButton>
 
 #include <QRadioButton>
 #include <QVBoxLayout>
@@ -33,7 +34,7 @@ public:
 
 public slots:
     void onSearchOver(QStringList lstFilePaths);
-    void onBtnSearchClicked();
+    void onFilePathEditingFinished();
     void onCheckEnvOver(CheckEnvRst checkEnvRst);
 
 signals:
@@ -48,6 +49,8 @@ private:
     QString getSizeString(qint64 bitSize);
     void onMouseRightOnTableWgt();
     void onOpenFilePosition();
+    void onCopyPath();
+    void onCopy();
     void onSortTanleWgt(int index);
 
 private:
@@ -55,14 +58,15 @@ private:
     QHBoxLayout* hBoxLayoutHead = new QHBoxLayout();
     Worker* worker = nullptr;
     QThread* workThread = nullptr;
-    DLineEdit* lineEidtFileName = nullptr;
-    QPushButton* btnSearch = nullptr;
+    DSearchEdit* searchEidtFileName = nullptr;
     QRadioButton* radioBtnExact = nullptr;
     QRadioButton* radioBtnFuzzy = nullptr;
     QTableWidget* tableWgtRst = nullptr;
     QMap<int, QString> rowWithFile;
     QMenu* tableWgtRstMenu = nullptr;
     QAction* actionOpen = nullptr;
+    QAction* actionCopyPath = nullptr;
+    QAction* actionCopy = nullptr;
     DSpinner* spinner = nullptr;
     TrayMenu* trayMenu = nullptr;
     QSystemTrayIcon* trayIcon = nullptr;
