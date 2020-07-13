@@ -23,6 +23,7 @@
 #include <QCloseEvent>
 #include <QClipboard>
 #include <QMimeData>
+#include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent) :
     DMainWindow(parent)
@@ -62,6 +63,11 @@ MainWindow::~MainWindow()
         hBoxLayoutHead = nullptr;
     }
 
+    if (vBoxRadioBtns) {
+        vBoxRadioBtns->deleteLater();
+        vBoxRadioBtns = nullptr;
+    }
+
     if (worker) {
         worker->deleteLater();
         worker = nullptr;
@@ -88,6 +94,7 @@ void MainWindow::initUi()
     spinner->setFixedSize(100, 100);
     spinner->start();
     spinner->hide();
+    searchEidtFileName->setPlaceholderText("搜索文件");
     radioBtnExact->setText("精确查找");
     radioBtnExact->setChecked(true);
     radioBtnFuzzy->setText("模糊查找");
@@ -118,8 +125,10 @@ void MainWindow::initUi()
 
     hBoxLayoutHead->addStretch(2);
     hBoxLayoutHead->addWidget(searchEidtFileName, 5);
-    hBoxLayoutHead->addWidget(radioBtnExact, 1);
-    hBoxLayoutHead->addWidget(radioBtnFuzzy, 1);
+    hBoxLayoutHead->addSpacing(20);
+    vBoxRadioBtns->addWidget(radioBtnExact, 1);
+    vBoxRadioBtns->addWidget(radioBtnFuzzy, 1);
+    hBoxLayoutHead->addLayout(vBoxRadioBtns, 1);
     hBoxLayoutHead->addStretch(2);
 
     vBoxLayoutMain->addLayout(hBoxLayoutHead);
@@ -147,24 +156,26 @@ void MainWindow::initConnection()
     connect(worker, &Worker::sigCheckEnvRst, this, &MainWindow::onCheckEnvOver, Qt::QueuedConnection);
     connect(this, &MainWindow::sigSearch, worker, &Worker::onSearch, Qt::QueuedConnection);
     connect(worker, &Worker::sigSearchOver, this, &MainWindow::onSearchOver, Qt::QueuedConnection);
-    connect(searchEidtFileName, &DSearchEdit::editingFinished, this, &MainWindow::onFilePathEditingFinished, Qt::QueuedConnection);
+    connect(searchEidtFileName, &DSearchEdit::returnPressed, this, &MainWindow::onFilePathEditingFinished, Qt::QueuedConnection);
     connect(tableWgtRst, &QTableWidget::customContextMenuRequested, this, &MainWindow::onMouseRightOnTableWgt);
     connect(actionOpen, &QAction::triggered, this, &MainWindow::onOpenFilePosition);
     connect(actionCopyPath, &QAction::triggered, this, &MainWindow::onCopyPath);
     connect(actionCopy, &QAction::triggered, this, &MainWindow::onCopy);
     connect(tableWgtRst->horizontalHeader(), &QHeaderView::sectionClicked, this, &MainWindow::onSortTanleWgt);
+
     connect(trayMenu, &TrayMenu::sigQuit, Application::instance(), &Application::quit);
     connect(trayIcon, &QSystemTrayIcon::activated, this, [ = ](QSystemTrayIcon::ActivationReason reason) {
         Q_UNUSED(reason)
         this->setVisible(!isVisible());
     });
 
-    connect(radioBtnFuzzy, &QRadioButton::clicked, this, [=](bool checked){
-        if(!checked)
+    connect(radioBtnFuzzy, &QRadioButton::clicked, this, [ = ](bool checked) {
+        if (!checked)
             return ;
-
-
     });
+
+    connect(trayMenu, &TrayMenu::sigUpdateDb, this, &MainWindow::onUpdateDb);
+    connect(this, &MainWindow::sigUpdateDb, worker, &Worker::onUpdateDb);
 }
 
 void MainWindow::checkEnv()
@@ -175,7 +186,6 @@ void MainWindow::checkEnv()
 void MainWindow::onSearchOver(QStringList lstFilePaths)
 {
     spinner->hide();
-    rowWithFile.clear();
     tableWgtRst->clearContents();
     tableWgtRst->setRowCount(lstFilePaths.count());
 
@@ -202,7 +212,6 @@ void MainWindow::onSearchOver(QStringList lstFilePaths)
         }
 
         QString changeTime = fileInfo.lastModified().toString("yyyy-MM-dd hh:mm:ss");
-
         QTableWidgetItem *indexItem = new QTableWidgetItem(QString::number(rowIndex + 1));
         indexItem->setTextAlignment(Qt::AlignCenter);
         tableWgtRst->setItem(rowIndex, 0, indexItem);
@@ -212,8 +221,6 @@ void MainWindow::onSearchOver(QStringList lstFilePaths)
         QTableWidgetItem *changeTimeItem = new QTableWidgetItem(changeTime);
         changeTimeItem->setTextAlignment(Qt::AlignCenter);
         tableWgtRst->setItem(rowIndex, 4, changeTimeItem);
-
-        rowWithFile.insert(rowIndex, fileInfo.filePath());
         rowIndex++;
     }
 
@@ -279,27 +286,18 @@ void MainWindow::onMouseRightOnTableWgt()
 
 void MainWindow::onOpenFilePosition()
 {
-    QTableWidgetItem *item = tableWgtRst->currentItem();
-
-    if (!item) {
-        return;
-    }
-
-    int row = item->row();
-    QString strFilePath = rowWithFile[row];
+    int row = tableWgtRst->currentRow();
+    QString strFilePath = tableWgtRst->item(row, 2)->text();
+    QTextCodec *code = QTextCodec::codecForName("gb2312");
+    auto path = code->fromUnicode(strFilePath).data();
+    qDebug() << path;
     QDesktopServices::openUrl(QUrl(strFilePath.left(strFilePath.lastIndexOf("/"))));
 }
 
 void MainWindow::onCopyPath()
 {
-    QTableWidgetItem *item = tableWgtRst->currentItem();
-
-    if (!item) {
-        return;
-    }
-
-    int row = item->row();
-    QString strFilePath = rowWithFile[row];
+    int row = tableWgtRst->currentRow();
+    QString strFilePath = tableWgtRst->item(row, 2)->text();
     QClipboard *clip = QApplication::clipboard();
 
     clip->setText(strFilePath);
@@ -307,17 +305,10 @@ void MainWindow::onCopyPath()
 
 void MainWindow::onCopy()
 {
-    QTableWidgetItem *item = tableWgtRst->currentItem();
-
-    if (!item) {
-        return;
-    }
-
-    int row = item->row();
-    QString strFilePath = rowWithFile[row];
-
+    int row = tableWgtRst->currentRow();
+    QString strFilePath = tableWgtRst->item(row, 2)->text();
     QClipboard *cb = QApplication::clipboard();
-    QMimeData* newMimeData = new QMimeData();
+    QMimeData *newMimeData = new QMimeData();
     newMimeData->setData("x-special/gnome-copied-files", QByteArray(QString("copy\nfile://%1").arg(strFilePath).toUtf8()));
     newMimeData->setData("text/uri-list", QByteArray(QString("file://%1").arg(strFilePath).toUtf8()));
     cb->setMimeData(newMimeData);
@@ -326,4 +317,12 @@ void MainWindow::onCopy()
 void MainWindow::onSortTanleWgt(int index)
 {
     tableWgtRst->sortByColumn(index);
+}
+
+void MainWindow::onUpdateDb()
+{
+    QString passwd = DInputDialog::getText(nullptr, "sudo密码", "需要sudo权限");
+    if (!passwd.isEmpty()) {
+        emit sigUpdateDb(passwd);
+    }
 }

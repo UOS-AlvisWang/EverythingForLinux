@@ -3,8 +3,8 @@
         <file>RSC/img/search.png</file>
         <file>RSC/img/unknowFile.png</file>
         <file>RSC/img/logo.ico</file>
-        <file>RSC/img/flush.png</file>
         <file>RSC/img/quit.png</file>
+        <file>RSC/img/update.png</file>
     </qresource>
     <qresource prefix="/">
         <file>RSC/img/tableWidget.qss</file>

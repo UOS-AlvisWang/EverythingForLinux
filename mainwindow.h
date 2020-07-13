@@ -40,6 +40,7 @@ public slots:
 signals:
     void sigSearch(QString fileName, SearchType searchType);
     void sigCheckEnv();
+    void sigUpdateDb(QString passwd);
 
 private:
     void initUi();
@@ -52,17 +53,18 @@ private:
     void onCopyPath();
     void onCopy();
     void onSortTanleWgt(int index);
+    void onUpdateDb();
 
 private:
     QVBoxLayout* vBoxLayoutMain = new QVBoxLayout();
     QHBoxLayout* hBoxLayoutHead = new QHBoxLayout();
+    QVBoxLayout* vBoxRadioBtns = new QVBoxLayout();
     Worker* worker = nullptr;
     QThread* workThread = nullptr;
     DSearchEdit* searchEidtFileName = nullptr;
     QRadioButton* radioBtnExact = nullptr;
     QRadioButton* radioBtnFuzzy = nullptr;
     QTableWidget* tableWgtRst = nullptr;
-    QMap<int, QString> rowWithFile;
     QMenu* tableWgtRstMenu = nullptr;
     QAction* actionOpen = nullptr;
     QAction* actionCopyPath = nullptr;

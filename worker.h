@@ -5,12 +5,15 @@
 
 #include <QObject>
 #include <QProcess>
+#include <DMessageManager>
+
+DWIDGET_USE_NAMESPACE
 
 class Worker : public QObject
 {
     Q_OBJECT
 public:
-    explicit Worker(QObject *parent = 0);
+    explicit Worker(QObject *parent = nullptr);
 
 signals:
     void sigSearchOver(QStringList lstFilePaths);
@@ -22,10 +25,13 @@ public slots:
     void onProcessStateChanged(QProcess::ProcessState state);
     void onCheckEnv();
     void onReadCheckEnv();
+    void onUpdateDb(QString passwd);
+    void onReadUpdateDb();
 
 private:
     QProcess* process = nullptr;
     QProcess* processCheckEnv = nullptr;
+    QProcess* processUpdateDb= nullptr;
     QStringList lstFilePaths;
 };
 
