@@ -21,18 +21,22 @@
 #include <QPixmap>
 #include <QSystemTrayIcon>
 #include <QCloseEvent>
+#include <QClipboard>
+#include <QMimeData>
+#include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent) :
     DMainWindow(parent)
     , worker(new Worker())
     , workThread(new QThread())
-    , lineEidtFileName(new DLineEdit(this))
-    , btnSearch(new QPushButton(this))
+    , searchEidtFileName(new DSearchEdit(this))
     , radioBtnExact(new QRadioButton(this))
     , radioBtnFuzzy(new QRadioButton(this))
     , tableWgtRst(new QTableWidget(this))
     , tableWgtRstMenu(new QMenu())
     , actionOpen(new QAction("打开文件所在位置", tableWgtRstMenu))
+    , actionCopyPath(new QAction("复制文件路径", tableWgtRstMenu))
+    , actionCopy(new QAction("复制", tableWgtRstMenu))
     , spinner(new DSpinner(this))
     , trayMenu(new TrayMenu(this))
     , trayIcon(new QSystemTrayIcon(this))
@@ -57,6 +61,11 @@ MainWindow::~MainWindow()
     if (hBoxLayoutHead) {
         hBoxLayoutHead->deleteLater();
         hBoxLayoutHead = nullptr;
+    }
+
+    if (vBoxRadioBtns) {
+        vBoxRadioBtns->deleteLater();
+        vBoxRadioBtns = nullptr;
     }
 
     if (worker) {
@@ -85,10 +94,7 @@ void MainWindow::initUi()
     spinner->setFixedSize(100, 100);
     spinner->start();
     spinner->hide();
-    btnSearch->setShortcut(Qt::Key_Enter);
-    btnSearch->setShortcut(Qt::Key_Return);
-    btnSearch->setIcon(QIcon("qrc:/img/RSC/img/search.png"));
-    btnSearch->setText("搜索");
+    searchEidtFileName->setPlaceholderText("搜索文件");
     radioBtnExact->setText("精确查找");
     radioBtnExact->setChecked(true);
     radioBtnFuzzy->setText("模糊查找");
@@ -118,10 +124,11 @@ void MainWindow::initUi()
     tableWgtRst->setHorizontalHeaderLabels(lstHeader);
 
     hBoxLayoutHead->addStretch(2);
-    hBoxLayoutHead->addWidget(lineEidtFileName, 5);
-    hBoxLayoutHead->addWidget(radioBtnExact, 1);
-    hBoxLayoutHead->addWidget(radioBtnFuzzy, 1);
-    hBoxLayoutHead->addWidget(btnSearch, 1);
+    hBoxLayoutHead->addWidget(searchEidtFileName, 5);
+    hBoxLayoutHead->addSpacing(20);
+    vBoxRadioBtns->addWidget(radioBtnExact, 1);
+    vBoxRadioBtns->addWidget(radioBtnFuzzy, 1);
+    hBoxLayoutHead->addLayout(vBoxRadioBtns, 1);
     hBoxLayoutHead->addStretch(2);
 
     vBoxLayoutMain->addLayout(hBoxLayoutHead);
@@ -132,6 +139,8 @@ void MainWindow::initUi()
     setCentralWidget(frame);
     frame->setLayout(vBoxLayoutMain);
 
+    tableWgtRstMenu->addAction(actionCopy);
+    tableWgtRstMenu->addAction(actionCopyPath);
     tableWgtRstMenu->addAction(actionOpen);
     tableWgtRst->setContextMenuPolicy(Qt::CustomContextMenu);
 
@@ -147,15 +156,26 @@ void MainWindow::initConnection()
     connect(worker, &Worker::sigCheckEnvRst, this, &MainWindow::onCheckEnvOver, Qt::QueuedConnection);
     connect(this, &MainWindow::sigSearch, worker, &Worker::onSearch, Qt::QueuedConnection);
     connect(worker, &Worker::sigSearchOver, this, &MainWindow::onSearchOver, Qt::QueuedConnection);
-    connect(btnSearch, &QPushButton::clicked, this, &MainWindow::onBtnSearchClicked, Qt::QueuedConnection);
+    connect(searchEidtFileName, &DSearchEdit::returnPressed, this, &MainWindow::onFilePathEditingFinished, Qt::QueuedConnection);
     connect(tableWgtRst, &QTableWidget::customContextMenuRequested, this, &MainWindow::onMouseRightOnTableWgt);
     connect(actionOpen, &QAction::triggered, this, &MainWindow::onOpenFilePosition);
+    connect(actionCopyPath, &QAction::triggered, this, &MainWindow::onCopyPath);
+    connect(actionCopy, &QAction::triggered, this, &MainWindow::onCopy);
     connect(tableWgtRst->horizontalHeader(), &QHeaderView::sectionClicked, this, &MainWindow::onSortTanleWgt);
+
     connect(trayMenu, &TrayMenu::sigQuit, Application::instance(), &Application::quit);
     connect(trayIcon, &QSystemTrayIcon::activated, this, [ = ](QSystemTrayIcon::ActivationReason reason) {
         Q_UNUSED(reason)
         this->setVisible(!isVisible());
     });
+
+    connect(radioBtnFuzzy, &QRadioButton::clicked, this, [ = ](bool checked) {
+        if (!checked)
+            return ;
+    });
+
+    connect(trayMenu, &TrayMenu::sigUpdateDb, this, &MainWindow::onUpdateDb);
+    connect(this, &MainWindow::sigUpdateDb, worker, &Worker::onUpdateDb);
 }
 
 void MainWindow::checkEnv()
@@ -166,7 +186,6 @@ void MainWindow::checkEnv()
 void MainWindow::onSearchOver(QStringList lstFilePaths)
 {
     spinner->hide();
-    rowWithFile.clear();
     tableWgtRst->clearContents();
     tableWgtRst->setRowCount(lstFilePaths.count());
 
@@ -193,7 +212,6 @@ void MainWindow::onSearchOver(QStringList lstFilePaths)
         }
 
         QString changeTime = fileInfo.lastModified().toString("yyyy-MM-dd hh:mm:ss");
-
         QTableWidgetItem *indexItem = new QTableWidgetItem(QString::number(rowIndex + 1));
         indexItem->setTextAlignment(Qt::AlignCenter);
         tableWgtRst->setItem(rowIndex, 0, indexItem);
@@ -203,17 +221,15 @@ void MainWindow::onSearchOver(QStringList lstFilePaths)
         QTableWidgetItem *changeTimeItem = new QTableWidgetItem(changeTime);
         changeTimeItem->setTextAlignment(Qt::AlignCenter);
         tableWgtRst->setItem(rowIndex, 4, changeTimeItem);
-
-        rowWithFile.insert(rowIndex, fileInfo.filePath());
         rowIndex++;
     }
 
     tableWgtRst->sortByColumn(4);
 }
 
-void MainWindow::onBtnSearchClicked()
+void MainWindow::onFilePathEditingFinished()
 {
-    QString fileName = lineEidtFileName->text();
+    QString fileName = searchEidtFileName->text();
 
     if (fileName.isEmpty()) {
         return;
@@ -270,18 +286,40 @@ void MainWindow::onMouseRightOnTableWgt()
 
 void MainWindow::onOpenFilePosition()
 {
-    QTableWidgetItem *item = tableWgtRst->currentItem();
+    int row = tableWgtRst->currentRow();
+    QString strFilePath = tableWgtRst->item(row, 2)->text();
+    QDesktopServices::openUrl(QUrl::fromLocalFile(strFilePath.left(strFilePath.lastIndexOf("/"))));
+}
 
-    if (!item) {
-        return;
-    }
+void MainWindow::onCopyPath()
+{
+    int row = tableWgtRst->currentRow();
+    QString strFilePath = tableWgtRst->item(row, 2)->text();
+    QClipboard *clip = QApplication::clipboard();
 
-    int row = item->row();
-    QString strFilePath = rowWithFile[row];
-    QDesktopServices::openUrl(QUrl(strFilePath.left(strFilePath.lastIndexOf("/"))));
+    clip->setText(strFilePath);
+}
+
+void MainWindow::onCopy()
+{
+    int row = tableWgtRst->currentRow();
+    QString strFilePath = tableWgtRst->item(row, 2)->text();
+    QClipboard *cb = QApplication::clipboard();
+    QMimeData *newMimeData = new QMimeData();
+    newMimeData->setData("x-special/gnome-copied-files", QByteArray(QString("copy\nfile://%1").arg(strFilePath).toUtf8()));
+    newMimeData->setData("text/uri-list", QByteArray(QString("file://%1").arg(strFilePath).toUtf8()));
+    cb->setMimeData(newMimeData);
 }
 
 void MainWindow::onSortTanleWgt(int index)
 {
     tableWgtRst->sortByColumn(index);
+}
+
+void MainWindow::onUpdateDb()
+{
+    QString passwd = DInputDialog::getText(nullptr, "sudo密码", "需要sudo权限");
+    if (!passwd.isEmpty()) {
+        emit sigUpdateDb(passwd);
+    }
 }

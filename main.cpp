@@ -12,6 +12,9 @@ int main(int argc, char *argv[])
     Application::loadDXcbPlugin();  //让bar处在标题栏中
     Application *a = Application::getInstance(argc, argv);
 
+    if (!a->setSingleInstance(a->applicationName()))
+        exit(-1);
+
     a->setAttribute(Qt::AA_UseHighDpiPixmaps);
     a->loadTranslator();
     a->setOrganizationName("Alvis");

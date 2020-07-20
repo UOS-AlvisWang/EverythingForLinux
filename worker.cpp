@@ -2,14 +2,17 @@
 
 #include <QFileInfo>
 #include <QDebug>
+#include <DInputDialog>
 
 Worker::Worker(QObject *parent) : QObject(parent)
   , process(new QProcess(this))
   , processCheckEnv(new QProcess(this))
+  , processUpdateDb(new QProcess(this))
 {
     connect(process, &QProcess::readyReadStandardOutput, this, &Worker::onRead);
     connect(process, &QProcess::stateChanged, this, &Worker::onProcessStateChanged);
     connect(processCheckEnv, &QProcess::readyReadStandardOutput, this, &Worker::onReadCheckEnv);
+    connect(processUpdateDb, &QProcess::readyReadStandardOutput, this, &Worker::onReadUpdateDb);
 }
 
 void Worker::onSearch(QString fileName, SearchType searchType)
@@ -61,6 +64,7 @@ void Worker::onProcessStateChanged(QProcess::ProcessState state)
         break;
     case QProcess::Starting:
         lstFilePaths.clear();
+        break;
     default:
         break;
     }
@@ -84,4 +88,19 @@ void Worker::onReadCheckEnv()
     }
 
     emit sigCheckEnvRst(Normal);
+}
+
+void Worker::onUpdateDb(QString passwd)
+{
+    QString shell = QString("echo %1 | sudo -S %2").arg(passwd).arg("updatedb");
+    processUpdateDb->start(shell);
+    qDebug() << "start" << shell;
+}
+
+void Worker::onReadUpdateDb()
+{
+    qDebug() << "read";
+    QByteArray bytes = processCheckEnv->readAllStandardOutput();
+    QString output = QString(bytes);
+    qDebug() << output;
 }

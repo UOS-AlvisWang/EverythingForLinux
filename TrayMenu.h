@@ -16,12 +16,15 @@ public:
 
 signals:
     void sigQuit();
+    void sigUpdateDb();
 
 private:
     void onQuitAction();
+    void onUpdateDbAction();
 
 private:
     QAction* actionQuit = nullptr;
+    QAction* actionUpdateDb = nullptr;
 };
 
 #endif // TRAYMENU_H
