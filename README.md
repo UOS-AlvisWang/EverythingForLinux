@@ -15,7 +15,7 @@ UI:Qt和DTK(Deepin Tool Kit)做界面。
 
 ## 展示
 #### 主界面
-![Pandao editor.md](https://github.com/UOS-AlvisWang/EverythingForLinux/blob/master/show/main.png")
+![主界面](https://github.com/UOS-AlvisWang/EverythingForLinux/blob/master/show/main.png")
 
 #### 右键菜单
 ![Pandao editor.md](https://github.com/UOS-AlvisWang/EverythingForLinux/blob/master/show/rightBtnMenu.png")
