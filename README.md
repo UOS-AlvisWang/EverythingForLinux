@@ -18,7 +18,7 @@ UI:Qt和DTK(Deepin Tool Kit)做界面。
 ![主界面](https://github.com/UOS-AlvisWang/EverythingForLinux/blob/master/show/main.png")
 
 #### 右键菜单
-![右键菜单](https://github.com/UOS-AlvisWang/EverythingForLinux/blob/master/show/rightBtnMenu.png")
+![鼠标右键菜单](https://github.com/UOS-AlvisWang/EverythingForLinux/blob/master/show/rightBtnMenu.png")
 
 #### 托盘隐藏
 ![托盘隐藏](https://github.com/UOS-AlvisWang/EverythingForLinux/blob/master/show/tray.png")
