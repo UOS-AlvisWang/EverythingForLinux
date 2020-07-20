@@ -288,10 +288,7 @@ void MainWindow::onOpenFilePosition()
 {
     int row = tableWgtRst->currentRow();
     QString strFilePath = tableWgtRst->item(row, 2)->text();
-    QTextCodec *code = QTextCodec::codecForName("gb2312");
-    auto path = code->fromUnicode(strFilePath).data();
-    qDebug() << path;
-    QDesktopServices::openUrl(QUrl(strFilePath.left(strFilePath.lastIndexOf("/"))));
+    QDesktopServices::openUrl(QUrl::fromLocalFile(strFilePath.left(strFilePath.lastIndexOf("/"))));
 }
 
 void MainWindow::onCopyPath()
