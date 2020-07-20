@@ -14,4 +14,14 @@ UI:Qt和DTK(Deepin Tool Kit)做界面。
 - 右键打开文件位置、复制文件、复制文件路径
 
 ## 展示
-![Pandao editor.md](https://pandao.github.io/editor.md/images/logos/editormd-logo-180x180.png "Pandao editor.md")
+#### 主界面
+![Pandao editor.md](https://github.com/UOS-AlvisWang/EverythingForLinux/show/main.png")
+
+#### 右键菜单
+![Pandao editor.md](https://github.com/UOS-AlvisWang/EverythingForLinux/show/rightBtnMenu.png")
+
+#### 托盘隐藏
+![Pandao editor.md](https://github.com/UOS-AlvisWang/EverythingForLinux/show/tray.png")
+
+#### 退出
+![Pandao editor.md](https://github.com/UOS-AlvisWang/EverythingForLinux/show/exit.png")
