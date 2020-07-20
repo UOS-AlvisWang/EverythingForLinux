@@ -18,10 +18,10 @@ UI:Qt和DTK(Deepin Tool Kit)做界面。
 ![主界面](https://github.com/UOS-AlvisWang/EverythingForLinux/blob/master/show/main.png")
 
 #### 右键菜单
-![Pandao editor.md](https://github.com/UOS-AlvisWang/EverythingForLinux/blob/master/show/rightBtnMenu.png")
+![右键菜单](https://github.com/UOS-AlvisWang/EverythingForLinux/blob/master/show/rightBtnMenu.png")
 
 #### 托盘隐藏
-![Pandao editor.md](https://github.com/UOS-AlvisWang/EverythingForLinux/blob/master/show/tray.png")
+![托盘隐藏](https://github.com/UOS-AlvisWang/EverythingForLinux/blob/master/show/tray.png")
 
 #### 退出
-![Pandao editor.md](https://github.com/UOS-AlvisWang/EverythingForLinux/blob/master/show/exit.png")
+![退出](https://github.com/UOS-AlvisWang/EverythingForLinux/blob/master/show/exit.png")
